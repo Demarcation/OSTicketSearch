@@ -4,7 +4,7 @@
 Place these files directly into the scp folder and access directly.
 You will need to be logged in to access search.
 
-##UserSearch.php
+## UserSearch.php
 
 System Design
 This system was designed to deal with several key issues in using OSTicket within an MSP environment.
@@ -35,7 +35,7 @@ The inclusion of 'User Notes' allows for users to be searched via multiple numbe
 Data Updates:
 When a result is narrowed to a single entry, Agents are able to update the following fields by clicking on them, User Phone, User Notes, Org Phone, Org Notes.
 
-##TicketSearch.php
+## TicketSearch.php
 
 System Design
 This system was designed to deal with several key issues in using OSTicket within an MSP environment.
