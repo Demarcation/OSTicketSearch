@@ -48,6 +48,8 @@ function run_search ($keyword) {
 			{  
 				$query .= " ( 	ost_user.`name` LIKE '%".db_input($text, false)."%' OR 
 								ost_organization.`name` LIKE '%".db_input($text, false)."%' OR 
+								ost_user_email.address LIKE '%".db_input($text, false)."%' OR 
+								ost_user__cdata.notes LIKE '%".db_input($text, false)."%' OR
 								ost_user__cdata.phone LIKE '%".db_input($text, false)."%'
 							) AND";				
 			}
