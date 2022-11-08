@@ -1,12 +1,11 @@
 <?php
 
-/*************************************************************************
+/***********************************************************************
 	Basic OSTicket User Search Tool
 	
 	Ashley Unwin
 
 **********************************************************************/
-
 require('staff.inc.php');
 
 function run_search ($keyword) {
@@ -50,7 +49,8 @@ function run_search ($keyword) {
 								ost_organization.`name` LIKE '%".db_input($text, false)."%' OR 
 								ost_user_email.address LIKE '%".db_input($text, false)."%' OR 
 								ost_user__cdata.notes LIKE '%".db_input($text, false)."%' OR
-								ost_user__cdata.phone LIKE '%".db_input($text, false)."%'
+								ost_user__cdata.phone LIKE '%".db_input($text, false)."%'OR
+								ost_organization__cdata.notes LIKE '%".db_input($text, false)."%'								
 							) AND";				
 			}
 			$query = substr($query, 0, -4);  #deduct the last ' AND' - 4 chars
@@ -438,6 +438,7 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 	### Update User Notes
 	if( isset($_GET['UserNotes']) AND $_GET['UserNotes'] != "" ) {
 		$UserNotesHTML = str_replace(PHP_EOL,"<br />",$_GET['UserNotes']);
+		$UserNotesHTML = str_replace('"',"'",$UserNotesHTML);
 		$UserNotesHTML = "<p>".$UserNotesHTML."</p>";
 		$query = '	UPDATE 
 						ost_user__cdata 
@@ -503,6 +504,7 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 	### Update Org Notes
 	if( isset($_GET['OrgId']) AND isset($_GET['OrgNotes']) AND $_GET['OrgNotes'] != "" ) {
 		$OrgNotesHTML = str_replace(PHP_EOL,"<br />",$_GET['OrgNotes']);
+		$OrgNotesHTML = str_replace('"',"'",$OrgNotesHTML);
 		$OrgNotesHTML = "<p>".$OrgNotesHTML."</p>";
 		$query = '	UPDATE 
 						ost_organization__cdata 
@@ -529,43 +531,53 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 		$commit = db_query($query, $logError=true, $buffered=true);	
 		$commit = db_query($query2, $logError=true, $buffered=true);		
 	}
-	header('Location: https://tickets.remoteit.co.uk/scp/UserSearch.php?UserId='.$_GET['UserId']);
+	header('Location: /scp/UserSearch.php?UserId='.$_GET['UserId']);
 }
+?>
 
+<?php
+require_once(STAFFINC_DIR.'header.inc.php');
+$ost->addExtraHeader('<title>User Search Tool</title>');
 ?>
 
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-
-    <title>User Search Tool</title>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1">
+	  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+	  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+	  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+	  <style>
+*, ::after, ::before {
+  box-sizing: content-box;
+}
+a {
+	text-decoration: none;
+}
+:root {
+	--bs-body-bg : #eee;
+}
+body {
+  font-family: "Lato", "Helvetica Neue", arial, helvetica, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.15px;
+  -webkit-font-smoothing:antialiased;
+          font-smoothing:antialiased;
+}</style>
+    
+	<title>User Search Tool</title>
+	<link rel="icon" type="image/png" href="favicon2.png">
   </head>
   <body>
-		<div class="row">
-			<div class="col-md-11">
-			<h3>User Search Tool - - - - - - <a href="TicketSearch.php">Ticket Search Tool</a></h3>
-			</div>
-			<div class="col-md-1" data-toggle="modal" data-target="#InfoModal" >
-				<svg width="2em" height="2em" viewBox="0 0 16 16" class="bi bi-question-circle-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-				  <path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.496 6.033a.237.237 0 0 1-.24-.247C5.35 4.091 6.737 3.5 8.005 3.5c1.396 0 2.672.73 2.672 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.105a.25.25 0 0 1-.25.25h-.81a.25.25 0 0 1-.25-.246l-.004-.217c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.803 0-1.253.478-1.342 1.134-.018.137-.128.25-.266.25h-.825zm2.325 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"/>
-				</svg>
-			</div>
-		</div>
+	<?php echo '<script>document.getElementById("table").classList.remove(".table td:not(:empty)");</script>' ?>
 		<div class="row">
 			<div class="col-md-12">
 				<form role="form" method="GET" class="form">
-					<div class="form-row" style="padding-bottom:5px">
-						<div class="col-md-6">
-							<input type="text" class="form-control" id="keyword" name="keyword" <?php if ( isset($_GET['keyword']) ) { echo 'value="'.$_GET['keyword'].'" ';} ?> autofocus />
-						</div>
-						<div class="col-md-2">
-							<button type="submit" class="form-control btn btn-primary">Search</button>
+					<div class="row g-3" style="padding-bottom:5px">
+						<div class="input-group mb-3">
+							<input type="text" class="form-control" id="keyword" name="keyword" <?php if ( isset($_GET['keyword']) ) { echo 'value="'.$_GET['keyword'].'" ';} ?> autofocus>
+							<button type="submit" class="btn btn-primary btn-lg">Search</button>
 						</div>
 					</div>
 				</form>
@@ -633,14 +645,14 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 										
 									}
 									echo '<tr>';
-									echo '<td> <a href="https://tickets.remoteit.co.uk/scp/UserSearch.php?UserId='.$row["UserId"].'" class="btn btn-primary" role="button">Select User</a></td> ';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
+									echo '<td> <a href="/scp/UserSearch.php?UserId='.$row["UserId"].'" class="btn btn-primary" role="button">Select User</a></td> ';
+									echo '<td> <a target="_blank" href="/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
 									echo '<td>';
 									if ( $row["UserPhone"] != "" ) {
 										echo $row["UserPhone"];
 										echo '
 											<div style="float:right">
-												<div style="float:left" id="UpdateNumber" data-toggle="modal" data-UserId="'.$row["UserId"].'" data-target="#UpdateNumberModal">
+												<div style="float:left" id="UpdateNumber" data-bs-toggle="modal" data-UserId="'.$row["UserId"].'" data-bs-target="#UpdateNumberModal">
 													<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 														<path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
 														<path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
@@ -658,7 +670,7 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 									{
 										echo '	
 											<div style="float:right">	
-												<div style="float:left" id="UpdateNumber" data-toggle="modal" data-UserId="'.$row["UserId"].'" data-target="#UpdateNumberModal">
+												<div style="float:left" id="UpdateNumber" data-bs-toggle="modal" data-UserId="'.$row["UserId"].'" data-bs-target="#UpdateNumberModal">
 													<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 													  <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
 													  <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
@@ -671,7 +683,7 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 									echo '<td> <a href="mailto:'.$row["UserEmail"].'">'.$row["UserEmail"].'</a></td> ';
 									echo '<td>
 											<div style="float:right">
-												<div style="float:left" id="UpdateUserNotes" data-toggle="modal" data-UserId="'.$row["UserId"].'" data-target="#UpdateUserNotesModal">
+												<div style="float:left" id="UpdateUserNotes" data-bs-toggle="modal" data-UserId="'.$row["UserId"].'" data-bs-target="#UpdateUserNotesModal">
 													<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 														<path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
 														<path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
@@ -680,13 +692,13 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 											</div>';
 										echo $row["UserNotes"];
 									echo '</td>';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/orgs.php?id='.$row["OrgId"].'#tickets">'.$row["OrgName"].'</td> ';
+									echo '<td> <a target="_blank" href="/scp/orgs.php?id='.$row["OrgId"].'#tickets">'.$row["OrgName"].'</td> ';
 									echo '<td>';
 									if ( $row["OrgPhone"] != "" ) {
 										echo $row["OrgPhone"];
 										echo '
 											<div style="float:right">
-												<div style="float:left" id="UpdateOrgPhone" data-toggle="modal" data-UserId="'.$row["OrgId"].'" data-target="#UpdateOrgPhoneModal">
+												<div style="float:left" id="UpdateOrgPhone" data-bs-toggle="modal" data-UserId="'.$row["OrgId"].'" data-bs-target="#UpdateOrgPhoneModal">
 													<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 													  <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
 													  <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
@@ -705,7 +717,7 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 									{
 										echo '	
 												<div style="float:right">
-													<div style="float:left" id="UpdateOrgPhone" data-toggle="modal" data-UserId="'.$row["OrgId"].'" data-target="#UpdateOrgPhoneModal">
+													<div style="float:left" id="UpdateOrgPhone" data-bs-toggle="modal" data-UserId="'.$row["OrgId"].'" data-bs-target="#UpdateOrgPhoneModal">
 														<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 														  <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
 														  <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
@@ -717,7 +729,7 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 									echo '</td>
 										<td>
 											<div style="float:right">
-												<div style="float:left" id="UpdateOrgNotes" data-toggle="modal" data-UserId="'.$row["OrgId"].'" data-target="#UpdateOrgNotesModal">
+												<div style="float:left" id="UpdateOrgNotes" data-bs-toggle="modal" data-UserId="'.$row["OrgId"].'" data-bs-target="#UpdateOrgNotesModal">
 													<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
 														<path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
 														<path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
@@ -727,7 +739,7 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 										echo $row["OrgNotes"];
 									echo '</td>';
 									
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/tickets.php?a=open&uid='.$row["UserId"].'"class="btn btn-success" role="button" > OPEN TICKET </a></td> ';	
+									echo '<td> <a target="_blank" href="/scp/tickets.php?a=open&uid='.$row["UserId"].'"class="btn btn-success" role="button" > OPEN TICKET </a></td> ';	
 									
 									echo '</tr>';
 								}
@@ -746,20 +758,20 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 
 						<!-- START UpdateNumber MODAL -->
 							<div class="modal fade" id="UpdateNumberModal">
-								<div class="modal-dialog">
+								<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
 									<div class="modal-content">
-										<div class="modal-header" style="display:inline;">
-											<button type="button" class="close" data-dismiss="modal">&times;</button>
-											<h4 class="modal-title">Update Number</h4>
+										<div class="modal-header">
+											<h5 class="modal-title">Update Number</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 										</div>
 										<form id="UserNumberUpdate" action="UserSearch.php" method="GET">
 											<div class="modal-body">
-												<input type="text" name="UserNumber" id="UserNumber" class="form-control" placeholder="01234 567 890" value="<?php echo $UserPhone;
+												<input type="text" name="UserNumber" id="UserNumber" class="form-control" style="box-sizing: border-box !important;" placeholder="01234 567 890" value="<?php echo $UserPhone;
 												?>" />
 												<input type="hidden" class="form-control" id="UserId" name="UserId" value="<?php echo $UserId; ?>" />
 											</div>
 											<div class="modal-footer">
-												<button type="button" id="closeBtn" class="btn btn-default" data-dismiss="modal">Close</button>
+												<button type="button" id="closeBtn" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 												<button type="sumbit" id="UpdateNumberNowBtn" class="btn btn-primary">Update</button>
 											</div>
 										</form>
@@ -769,19 +781,19 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 						<!-- END UpdateNumber MODAL -->
 						<!-- START UpdateUserNotes MODAL -->
 							<div class="modal fade" id="UpdateUserNotesModal">
-								<div class="modal-dialog">
+								<div class="modal-dialog modal-dialog-centered">
 									<div class="modal-content">
-										<div class="modal-header" style="display:inline;">
-											<button type="button" class="close" data-dismiss="modal">&times;</button>
-											<h4 class="modal-title">Update User Notes</h4>
+										<div class="modal-header">
+											<h5 class="modal-title">Update User Notes</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 										</div>
 										<form id="UserNotesUpdate" action="UserSearch.php" method="GET">
 											<div class="modal-body">
 												<input type="hidden" class="form-control" id="UserId" name="UserId" value="<?php echo $UserId; ?>" />
-												<textarea rows="5" name="UserNotes" id="UserNotes" class="form-control" placeholder="User Notes"><?php echo $UserNotesPHP; ?></textarea>
+												<textarea rows="5" name="UserNotes" id="UserNotes" class="form-control" placeholder="User Notes" style="box-sizing: border-box !important;"><?php echo $UserNotesPHP; ?></textarea>
 											</div>
 											<div class="modal-footer">
-												<button type="button" id="closeBtn" class="btn btn-default" data-dismiss="modal">Close</button>
+												<button type="button" id="closeBtn" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 												<button type="sumbit" id="UpdateUserNotesNowBtn" class="btn btn-primary">Update</button>
 											</div>
 										</form>
@@ -791,20 +803,20 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 						<!-- END UpdateUserNotes MODAL -->
 						<!-- START UpdateOrgPhone MODAL -->
 							<div class="modal fade" id="UpdateOrgPhoneModal">
-								<div class="modal-dialog">
+								<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
 									<div class="modal-content">
-										<div class="modal-header" style="display:inline;">
-											<button type="button" class="close" data-dismiss="modal">&times;</button>
-											<h4 class="modal-title">Update Org Phone Number</h4>
+										<div class="modal-header">
+											<h5 class="modal-title">Update Org Phone Number</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 										</div>
 										<form id="OrgPhoneUpdate" action="UserSearch.php" method="GET">
 											<div class="modal-body">
 												<input type="hidden" class="form-control" id="UserId" name="UserId" value="<?php echo $UserId; ?>" />
 												<input type="hidden" class="form-control" id="OrgId" name="OrgId" value="<?php echo $OrgId; ?>" />
-												<input type="text" name="OrgPhone" id="OrgPhone" class="form-control" placeholder="01234 567 890" value="<?php echo $OrgPhone; ?>"/>
+												<input type="text" name="OrgPhone" id="OrgPhone" class="form-control" style="box-sizing: border-box !important;" placeholder="01234 567 890" value="<?php echo $OrgPhone; ?>"/>
 											</div>
 											<div class="modal-footer">
-												<button type="button" id="closeBtn" class="btn btn-default" data-dismiss="modal">Close</button>
+												<button type="button" id="closeBtn" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 												<button type="sumbit" id="UpdateOrgPhoneNowBtn" class="btn btn-primary">Update</button>
 											</div>
 										</form>
@@ -814,20 +826,20 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 						<!-- END UpdateOrgPhone MODAL -->
 						<!-- START UpdateOrgNotes MODAL -->
 							<div class="modal fade" id="UpdateOrgNotesModal">
-								<div class="modal-dialog">
+								<div class="modal-dialog modal-dialog-centered">
 									<div class="modal-content">
-										<div class="modal-header" style="display:inline;">
-											<button type="button" class="close" data-dismiss="modal">&times;</button>
-											<h4 class="modal-title">Update Org Notes</h4>
+										<div class="modal-header">
+											<h5 class="modal-title">Update Org Notes</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 										</div>
 										<form id="OrgNotesUpdate" action="UserSearch.php" method="GET">
 											<div class="modal-body">
 												<input type="hidden" class="form-control" id="UserId" name="UserId" value="<?php echo $UserId; ?>" />
 												<input type="hidden" class="form-control" id="OrgId" name="OrgId" value="<?php echo $OrgId; ?>" />
-												<textarea rows="5" name="OrgNotes" id="OrgNotes" class="form-control" placeholder="Org Notes"><?php echo $OrgNotesPHP; ?></textarea>
+												<textarea rows="5" name="OrgNotes" id="OrgNotes" class="form-control" placeholder="Org Notes" style="box-sizing: border-box !important;"><?php echo $OrgNotesPHP; ?></textarea>
 											</div>
 											<div class="modal-footer">
-												<button type="button" id="closeBtn" class="btn btn-default" data-dismiss="modal">Close</button>
+												<button type="button" id="closeBtn" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 												<button type="sumbit" id="UpdateOrgNotesNowBtn" class="btn btn-primary">Update</button>
 											</div>
 										</form>
@@ -843,7 +855,7 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 								<div class="modal-dialog" style="width:75%; max-width:none">
 									<div class="modal-content">
 										<div class="modal-header" style="display:inline;">
-											<button type="button" class="close" data-dismiss="modal">&times;</button>
+											<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 											<h4 class="modal-title">System Info</h4>
 										</div>
 									
@@ -881,7 +893,7 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 											
 											<div class="modal-footer">
 												<span class="mr-auto" style="font-size:9px">System Design by <a href="https://www.ashleyunwin.com">AshleyUnwin.com</a></span>
-												<button type="button" id="closeBtn" class="btn btn-default" data-dismiss="modal">Close</button>
+												<button type="button" id="closeBtn" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 											</div>
 										
 									</div>
@@ -940,10 +952,10 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 								while($row = $u_o_commit->fetch_assoc())  {	
 									$rowcolor = ticketstatusid2rowbgcolor($row["TicketStatus"]);
 									echo '<tr style="background-color:'.$rowcolor.'">';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/tickets.php?id='.$row['TicketId'].'">'.$row['TicketNumber'].' </a> </td>';
+									echo '<td> <a target="_blank" href="/scp/tickets.php?id='.$row['TicketId'].'#note">'.$row['TicketNumber'].' </a> </td>';
 									echo '<td>'.$row['TicketStatusName'].'</td>';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/tickets.php?id='.$row['TicketId'].'">'.$row['TicketSubject'].' </a> </td>';
+									echo '<td> <a target="_blank" href="/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
+									echo '<td> <a target="_blank" href="/scp/tickets.php?id='.$row['TicketId'].'#note">'.$row['TicketSubject'].' </a> </td>';
 									if ( $row['TicketOverdue'] == 1 ) {
 										echo '<td style="color:red;">'.$row['TicketDue'].'</td>';
 									}else{
@@ -978,10 +990,10 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 								while($row = $u_c_commit->fetch_assoc())  {	
 									$rowcolor = ticketstatusid2rowbgcolor($row["TicketStatus"]);
 									echo '<tr style="background-color:'.$rowcolor.'">';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/tickets.php?id='.$row['TicketId'].'">'.$row['TicketNumber'].' </a> </td>';
+									echo '<td> <a target="_blank" href="/scp/tickets.php?id='.$row['TicketId'].'#note">'.$row['TicketNumber'].' </a> </td>';
 									echo '<td>'.$row['TicketStatusName'].'</td>';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/tickets.php?id='.$row['TicketId'].'">'.$row['TicketSubject'].' </a> </td>';
+									echo '<td> <a target="_blank" href="/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
+									echo '<td> <a target="_blank" href="/scp/tickets.php?id='.$row['TicketId'].'#note">'.$row['TicketSubject'].' </a> </td>';
 									if ( $row['TicketOverdue'] == 1 ) {
 										echo '<td style="color:red;">'.$row['TicketDue'].'</td>';
 									}else{
@@ -1016,10 +1028,10 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 								while($row = $o_o_commit->fetch_assoc())  {	
 									$rowcolor = ticketstatusid2rowbgcolor($row["TicketStatus"]);
 									echo '<tr style="background-color:'.$rowcolor.'">';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/tickets.php?id='.$row['TicketId'].'">'.$row['TicketNumber'].' </a> </td>';
+									echo '<td> <a target="_blank" href="/scp/tickets.php?id='.$row['TicketId'].'#note">'.$row['TicketNumber'].' </a> </td>';
 									echo '<td>'.$row['TicketStatusName'].'</td>';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/tickets.php?id='.$row['TicketId'].'">'.$row['TicketSubject'].' </a> </td>';
+									echo '<td> <a target="_blank" href="/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
+									echo '<td> <a target="_blank" href="/scp/tickets.php?id='.$row['TicketId'].'#note">'.$row['TicketSubject'].' </a> </td>';
 									if ( $row['TicketOverdue'] == 1 ) {
 										echo '<td style="color:red;">'.$row['TicketDue'].'</td>';
 									}else{
@@ -1054,10 +1066,10 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 								while($row = $o_c_commit->fetch_assoc())  {	
 									$rowcolor = ticketstatusid2rowbgcolor($row["TicketStatus"]);
 									echo '<tr style="background-color:'.$rowcolor.'">';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/tickets.php?id='.$row['TicketId'].'">'.$row['TicketNumber'].' </a> </td>';
+									echo '<td> <a target="_blank" href="/scp/tickets.php?id='.$row['TicketId'].'#note">'.$row['TicketNumber'].' </a> </td>';
 									echo '<td>'.$row['TicketStatusName'].'</td>';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
-									echo '<td> <a target="_blank" href="https://tickets.remoteit.co.uk/scp/tickets.php?id='.$row['TicketId'].'">'.$row['TicketSubject'].' </a> </td>';
+									echo '<td> <a target="_blank" href="/scp/users.php?id='.$row["UserId"].'">'.$row["UserName"].'</a></td> ';
+									echo '<td> <a target="_blank" href="/scp/tickets.php?id='.$row['TicketId'].'#note">'.$row['TicketSubject'].' </a> </td>';
 									if ( $row['TicketOverdue'] == 1 ) {
 										echo '<td style="color:red;">'.$row['TicketDue'].'</td>';
 									}else{
@@ -1084,13 +1096,15 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 
 
 
+<?php
+$ost->addExtraHeader('<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>');
+$ost->addExtraHeader('<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>');
+$ost->addExtraHeader('<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>');
+?>
 
 
 
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
+    
 	<script>
 		$(document).ready(function() {
 				var keywordInput = $('#keyword');
@@ -1156,12 +1170,9 @@ if( (isset($_GET['UserNumber']) OR isset($_GET['UserNotes']) OR isset($_GET['Org
 	</script>
   </body>
 </html>
-
+<?php
+require_once(STAFFINC_DIR.'footer.inc.php');
+?>
 <?php
 
-
-
-
-
 ?>
-
